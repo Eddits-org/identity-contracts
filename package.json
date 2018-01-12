@@ -1,0 +1,11 @@
+{
+  "name": "edas-contracts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Antoine <antoine.detante@intech.lu>",
+  "license": "MIT",
+  "devDependencies": {
+    "async": "^2.6.0",
+    "truffle": "^4.0.4"
+  }
+}
