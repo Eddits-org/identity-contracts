@@ -13,7 +13,7 @@ contract Identity is ERC725, ERC735 {
   mapping (uint256 => bytes32[]) keysByPurpose;
   mapping (uint256 => Transaction) transactions;
   mapping (bytes32 => Claim) claims;
-  mapping (uint256 => bytes32[]) claimsByType;
+  mapping (uint256 => bytes32[]) claimsByTopic;
   
   uint nonce = 0;
   
@@ -125,28 +125,28 @@ contract Identity is ERC725, ERC735 {
 
   function deposit () public payable {}
 
-  function addClaim(uint256 _claimType, uint256 _scheme, address _issuer, bytes _signature, bytes _data, string _uri) isClaimSigner public returns (uint256 requestId) {
-    bytes32 claimId = keccak256(_issuer, _claimType);
-    if (claims[claimId].claimType > 0) {
-      ClaimChanged(claimId, _claimType, _scheme, _issuer, _signature, _data, _uri);
+  function addClaim(uint256 _topic, uint256 _scheme, address _issuer, bytes _signature, bytes _data, string _uri) isClaimSigner public returns (uint256 requestId) {
+    bytes32 claimId = keccak256(_issuer, _topic);
+    if (claims[claimId].topic > 0) {
+      ClaimChanged(claimId, _topic, _scheme, _issuer, _signature, _data, _uri);
     } else {
-      ClaimAdded(claimId, _claimType, _scheme, _issuer, _signature, _data, _uri);
+      ClaimAdded(claimId, _topic, _scheme, _issuer, _signature, _data, _uri);
     }
     claims[claimId] = Claim({
-      claimType: _claimType,
+      topic: _topic,
       scheme: _scheme,
       issuer: _issuer,
       signature: _signature,
       data: _data,
       uri: _uri
     });
-    claimsByType[_claimType].push(claimId);
+    claimsByTopic[_topic].push(claimId);
   }
 
-  function getClaim(bytes32 _claimId) public constant returns(uint256 claimType, uint256 scheme, address issuer, bytes signature, bytes data, string uri) {
+  function getClaim(bytes32 _claimId) public constant returns(uint256 topic, uint256 scheme, address issuer, bytes signature, bytes data, string uri) {
     Claim memory claim = claims[_claimId];
-    if (claim.claimType > 0) {
-      claimType = claim.claimType;
+    if (claim.topic > 0) {
+      topic = claim.topic;
       scheme = claim.scheme;
       issuer = claim.issuer;
       signature = claim.signature;
@@ -155,15 +155,15 @@ contract Identity is ERC725, ERC735 {
     }
   }
 
-  function getClaimIdsByType(uint256 _claimType) public constant returns(bytes32[] claimIds) {
-    return claimsByType[_claimType];
+  function getClaimIdsByTopic(uint256 _topic) public constant returns(bytes32[] claimIds) {
+    return claimsByTopic[_topic];
   }
 
 
   function removeClaim(bytes32 _claimId) public returns (bool success) {
     Claim memory claim = claims[_claimId];
     require(msg.sender == claim.issuer || keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || msg.sender == address(this));
-    bytes32[] storage claimsTypeArr = claimsByType[claim.claimType];
+    bytes32[] storage claimsTypeArr = claimsByTopic[claim.topic];
     for (uint i = 0; i < claimsTypeArr.length; i++) {      
       if (claimsTypeArr[i] == _claimId) {
         claimsTypeArr[i] = claimsTypeArr[claimsTypeArr.length - 1];
@@ -172,7 +172,7 @@ contract Identity is ERC725, ERC735 {
       }
     }
     delete claims[_claimId];
-    ClaimRemoved(_claimId, claim.claimType, claim.scheme, claim.issuer, claim.signature, claim.data, claim.uri);
+    ClaimRemoved(_claimId, claim.topic, claim.scheme, claim.issuer, claim.signature, claim.data, claim.uri);
     return true;
   }
 
