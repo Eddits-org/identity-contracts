@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.24;
 
 import "./ERC725.sol";
 import "./ERC735.sol";
@@ -39,7 +39,7 @@ contract Identity is ERC725, ERC735 {
     _;
   }
 
-  function Identity() public {
+  constructor() public {
     _addKey(bytes32(msg.sender), MANAGEMENT_PURPOSE, ECDSA_TYPE);
   }
 
@@ -65,7 +65,7 @@ contract Identity is ERC725, ERC735 {
 
   function _addKey(bytes32 _key, uint256 _purpose, uint256 _type) internal returns (bool) {
     require(!keysPurposes[_key][_purpose]);
-    KeyAdded(_key, _purpose, _type);
+    emit KeyAdded(_key, _purpose, _type);
     keysType[_key] = _type;
     keysPurposes[_key][_purpose] = true;
     keysPurposesArr[_key].push(_purpose);
@@ -74,7 +74,7 @@ contract Identity is ERC725, ERC735 {
   }
 
   function removeKey(bytes32 _key, uint256 _purpose) isManagerOrSelf public returns (bool) {
-    KeyRemoved(_key, _purpose, keysType[_key]);
+    emit KeyRemoved(_key, _purpose, keysType[_key]);
     keysPurposes[_key][_purpose] = false;
     // Remove from keysByPurpose
     bytes32[] storage keys = keysByPurpose[_purpose];
@@ -103,7 +103,7 @@ contract Identity is ERC725, ERC735 {
   function execute(address _to, uint256 _value, bytes _data) public returns (uint256 executionId) {
       require(keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ACTION_PURPOSE]);
       executionId = uint256(keccak256(_to, _value, _data, nonce));
-      ExecutionRequested(executionId, _to, _value, _data);
+      emit ExecutionRequested(executionId, _to, _value, _data);
       transactions[executionId] = Transaction ({
         to: _to,
         value: _value,
@@ -128,9 +128,9 @@ contract Identity is ERC725, ERC735 {
   function addClaim(uint256 _topic, uint256 _scheme, address _issuer, bytes _signature, bytes _data, string _uri) isClaimSigner public returns (uint256 requestId) {
     bytes32 claimId = keccak256(_issuer, _topic);
     if (claims[claimId].topic > 0) {
-      ClaimChanged(claimId, _topic, _scheme, _issuer, _signature, _data, _uri);
+      emit ClaimChanged(claimId, _topic, _scheme, _issuer, _signature, _data, _uri);
     } else {
-      ClaimAdded(claimId, _topic, _scheme, _issuer, _signature, _data, _uri);
+      emit ClaimAdded(claimId, _topic, _scheme, _issuer, _signature, _data, _uri);
     }
     claims[claimId] = Claim({
       topic: _topic,
@@ -172,7 +172,7 @@ contract Identity is ERC725, ERC735 {
       }
     }
     delete claims[_claimId];
-    ClaimRemoved(_claimId, claim.topic, claim.scheme, claim.issuer, claim.signature, claim.data, claim.uri);
+    emit ClaimRemoved(_claimId, claim.topic, claim.scheme, claim.issuer, claim.signature, claim.data, claim.uri);
     return true;
   }
 
