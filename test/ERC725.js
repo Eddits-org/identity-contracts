@@ -416,7 +416,7 @@ contract('Identity', (accounts) => {
     });
   })
 
-  it.only('allow payment key to make payment from a PSP_Identity contract', (done) => {
+  it('allow payment key to make payment from a PSP_Identity contract', (done) => {
     const managementKey = addrToKey(accounts[3]);
     // const pspKey = addrToKey(accounts[4]);
 
