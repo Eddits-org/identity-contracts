@@ -7,10 +7,12 @@ const ACTION_PURPOSE = 2;
 const CLAIM_PURPOSE = 3;
 const ENCRYPTION_PURPOSE = 4;
 
+const ALLOW_PAYMENT_PURPOSE = 101;
+
 const ECDSA_TYPE = 1;
 const RSA_TYPE = 2;
 
-const addrToKey = addr => '0x'+web3.padLeft(addr.substring(2), 64);
+const addrToKey = addr => '0x' + web3.padLeft(addr.substring(2), 64);
 
 contract('Identity', (accounts) => {
 
@@ -22,7 +24,7 @@ contract('Identity', (accounts) => {
       getOwnerKey: ['ctr', (res, cb) => {
         res.ctr.getKey(addrToKey(owner), MANAGEMENT_PURPOSE).then(key => cb(null, key));
       }],
-      getOwnerKeyPurposes: ['ctr', (res,cb) => {
+      getOwnerKeyPurposes: ['ctr', (res, cb) => {
         res.ctr.getKeyPurpose(addrToKey(owner)).then(purposes => cb(null, purposes));
       }],
       getManagementKeys: ['ctr', (res, cb) => {
@@ -37,7 +39,7 @@ contract('Identity', (accounts) => {
       getEncryptionKeys: ['ctr', (res, cb) => {
         res.ctr.getKeysByPurpose(ENCRYPTION_PURPOSE).then(keys => cb(null, keys));
       }],
-    },(err, res) => {
+    }, (err, res) => {
       // getOwnerKey
       assert.isTrue(res.getOwnerKey[0].equals(MANAGEMENT_PURPOSE), 'Invalid owner key purpose');
       assert.isTrue(res.getOwnerKey[1].equals(ECDSA_TYPE), 'Invalid owner key type');
@@ -94,22 +96,22 @@ contract('Identity', (accounts) => {
       getEncryptionKeys: ['ctr', 'addEncryptionKey', (res, cb) => {
         res.ctr.getKeysByPurpose(ENCRYPTION_PURPOSE).then(keys => cb(null, keys));
       }],
-    },(err, res) => {
-       // getManagementKeys
-       assert.equal(res.getManagementKeys.length, 2, 'Invalid number of MANAGEMENT keys');
-       assert.isOk(res.getManagementKeys.find(key => key === managementKey), 'Cannot find MANAGEMENT key');
+    }, (err, res) => {
+      // getManagementKeys
+      assert.equal(res.getManagementKeys.length, 2, 'Invalid number of MANAGEMENT keys');
+      assert.isOk(res.getManagementKeys.find(key => key === managementKey), 'Cannot find MANAGEMENT key');
 
-       // getActionKeys
-       assert.equal(res.getActionKeys.length, 1, 'Invalid number of ACTION keys');
-       assert.equal(res.getActionKeys[0], actionKey, 'Cannot find ACTION key');
+      // getActionKeys
+      assert.equal(res.getActionKeys.length, 1, 'Invalid number of ACTION keys');
+      assert.equal(res.getActionKeys[0], actionKey, 'Cannot find ACTION key');
 
-       // getClaimKeys
-       assert.equal(res.getClaimKeys.length, 1, 'Invalid number of CLAIM keys');
-       assert.equal(res.getClaimKeys[0], claimKey, 'Cannot find CLAIM key');
+      // getClaimKeys
+      assert.equal(res.getClaimKeys.length, 1, 'Invalid number of CLAIM keys');
+      assert.equal(res.getClaimKeys[0], claimKey, 'Cannot find CLAIM key');
 
-       // getEncryptionKeys
-       assert.equal(res.getEncryptionKeys.length, 1, 'Invalid number of ENCRYPTION keys');
-       assert.equal(res.getEncryptionKeys[0], encryptionKey, 'Cannot find ENCRYPTION key');
+      // getEncryptionKeys
+      assert.equal(res.getEncryptionKeys.length, 1, 'Invalid number of ENCRYPTION keys');
+      assert.equal(res.getEncryptionKeys[0], encryptionKey, 'Cannot find ENCRYPTION key');
 
       return done();
     });
@@ -137,7 +139,7 @@ contract('Identity', (accounts) => {
           getClaimKeys: ['ctr', 'addClaimKey', (res, cb) => {
             res.ctr.getKeysByPurpose(CLAIM_PURPOSE).then(keys => cb(null, keys));
           }],
-        },(err, res) => {
+        }, (err, res) => {
           assert.equal(res.getClaimKeys.length, 0, 'Non management key can add claim key');
           return cb2();
         });
@@ -159,7 +161,7 @@ contract('Identity', (accounts) => {
           getClaimKeys: ['ctr', 'addClaimKey', (res, cb) => {
             res.ctr.getKeysByPurpose(CLAIM_PURPOSE).then(keys => cb(null, keys));
           }],
-        },(err, res) => {
+        }, (err, res) => {
           assert.equal(res.getClaimKeys.length, 1, 'Management key cannot add claim key');
           return cb2();
         });
@@ -181,7 +183,7 @@ contract('Identity', (accounts) => {
       addActionKey: ['ctr', (res, cb) => {
         res.ctr.addKey(claimKey, ACTION_PURPOSE, ECDSA_TYPE).then(() => cb());
       }],
-      getKeyPurpose: ['ctr', 'addFirstClaimKey', 'addSecondClaimKey','addActionKey', (res, cb) => {
+      getKeyPurpose: ['ctr', 'addFirstClaimKey', 'addSecondClaimKey', 'addActionKey', (res, cb) => {
         res.ctr.getKeyPurpose(claimKey).then(purposes => {
           assert.equal(purposes.length, 2, 'Invalid number of purposes for the added key');
           assert.isOk(purposes.find(p => p.equals(CLAIM_PURPOSE)), 'Key purposes does not contains CLAIM');
@@ -230,12 +232,12 @@ contract('Identity', (accounts) => {
           cb();
         });
       }],
-    },done);
+    }, done);
   });
 
   it('non management key cannot remove key', (done) => {
     const actionKey = addrToKey(accounts[1]);
-    const claimKey = addrToKey(accounts[2]);    
+    const claimKey = addrToKey(accounts[2]);
     async.auto({
       ctr: (cb) => Identity.new({from: owner}).then(ctr => cb(null, ctr)),
       addActionKey: ['ctr', (res, cb) => {
@@ -261,54 +263,54 @@ contract('Identity', (accounts) => {
           cb()
         });
       }]
-    },done);
+    }, done);
   });
 
   it('management key can execute transaction without approval', (done) => {
     const managementKey = addrToKey(accounts[1]);
     const targetAccount = accounts[2];
     const initialBalance = web3.eth.getBalance(targetAccount);
-    
+
     async.auto({
       ctr: (cb) => Identity.new({from: owner}).then(ctr => cb(null, ctr)),
       addManagementKey: ['ctr', (res, cb) => {
         res.ctr.addKey(managementKey, MANAGEMENT_PURPOSE, ECDSA_TYPE).then(() => cb());
       }],
       deposit: ['ctr', (res, cb) => {
-        res.ctr.deposit({from: owner, value:  web3.toWei(1,'ether')}).then(() => cb());
+        res.ctr.deposit({from: owner, value: web3.toWei(1, 'ether')}).then(() => cb());
       }],
       executeTx: ['ctr', 'deposit', 'addManagementKey', (res, cb) => {
-        res.ctr.execute(targetAccount, web3.toWei(1,'ether'), '0x0', {from: accounts[1]}).then(() => {
+        res.ctr.execute(targetAccount, web3.toWei(1, 'ether'), '0x0', {from: accounts[1]}).then(() => {
           const diff = web3.eth.getBalance(targetAccount).minus(initialBalance);
-          assert.isTrue(diff.equals(web3.toWei(1,'ether')), 'Transaction not executed');
+          assert.isTrue(diff.equals(web3.toWei(1, 'ether')), 'Transaction not executed');
           cb();
         })
       }]
-    },done);
+    }, done);
   });
 
   it('action key can execute transaction with approval', (done) => {
     const actionKey = addrToKey(accounts[1]);
     const targetAccount = accounts[2];
     const initialBalance = web3.eth.getBalance(targetAccount);
-    
+
     async.auto({
       ctr: (cb) => Identity.new({from: owner}).then(ctr => cb(null, ctr)),
       addActionKey: ['ctr', (res, cb) => {
         res.ctr.addKey(actionKey, ACTION_PURPOSE, ECDSA_TYPE).then(() => cb());
       }],
       deposit: ['ctr', (res, cb) => {
-        res.ctr.deposit({from: owner, value:  web3.toWei(1,'ether')}).then(() => cb());
+        res.ctr.deposit({from: owner, value: web3.toWei(1, 'ether')}).then(() => cb());
       }],
       executeTx: ['ctr', 'deposit', 'addActionKey', (res, cb) => {
         const watcher = res.ctr.ExecutionRequested();
-        watcher.watch((err, evt) => {          
+        watcher.watch((err, evt) => {
           watcher.stopWatching();
           cb(null, evt.args.executionId);
         });
-        res.ctr.execute(targetAccount, web3.toWei(1,'ether'), '0x0', {from: accounts[1]}).then(() => {
+        res.ctr.execute(targetAccount, web3.toWei(1, 'ether'), '0x0', {from: accounts[1]}).then(() => {
           const diff = web3.eth.getBalance(targetAccount).minus(initialBalance);
-          assert.isFalse(diff.equals(web3.toWei(1,'ether')), 'Transaction executed');
+          assert.isFalse(diff.equals(web3.toWei(1, 'ether')), 'Transaction executed');
         })
       }],
       approveWithActionKey: ['ctr', 'executeTx', (res, cb) => {
@@ -322,32 +324,32 @@ contract('Identity', (accounts) => {
         res.ctr.approve(res.executeTx, true, {from: owner})
           .then(() => {
             const diff = web3.eth.getBalance(targetAccount).minus(initialBalance);
-            assert.isTrue(diff.equals(web3.toWei(1,'ether')), 'Owner cannot approve tx');
+            assert.isTrue(diff.equals(web3.toWei(1, 'ether')), 'Owner cannot approve tx');
             cb();
           });
       }]
-    },done);
+    }, done);
   });
 
   it('non management or action key cannot execute transaction', (done) => {
     const claimKey = addrToKey(accounts[1]);
-    
+
     async.auto({
       ctr: (cb) => Identity.new({from: owner}).then(ctr => cb(null, ctr)),
       addClaimKey: ['ctr', (res, cb) => {
         res.ctr.addKey(claimKey, CLAIM_PURPOSE, ECDSA_TYPE).then(() => cb());
       }],
       executeTx: ['ctr', 'addClaimKey', (res, cb) => {
-        res.ctr.execute(owner, web3.toWei(1,'ether'), '0x0', {from: accounts[1]})
+        res.ctr.execute(owner, web3.toWei(1, 'ether'), '0x0', {from: accounts[1]})
           .then(() => {
             assert.fail('Claim key can execute transaction');
           })
           .catch(() => cb());
       }]
-    },done);
+    }, done);
   });
 
-  it.only('key\'s type should be conserved after key removal', (done) => {
+  it('key\'s type should be conserved after key removal', (done) => {
     const key = addrToKey(accounts[1]);
     async.auto({
       ctr: (cb) => Identity.new({from: owner}).then(ctr => cb(null, ctr)),
@@ -356,7 +358,7 @@ contract('Identity', (accounts) => {
       }],
       addActionKey: ['ctr', (res, cb) => {
         res.ctr.addKey(key, ACTION_PURPOSE, ECDSA_TYPE).then(() => cb());
-      }],      
+      }],
       getManagementKeyTypeBeforeRemoval: ['ctr', 'addManagementKey', 'addActionKey', (res, cb) => {
         res.ctr.getKey(key, MANAGEMENT_PURPOSE).then(key => cb(null, key));
       }],
@@ -366,10 +368,53 @@ contract('Identity', (accounts) => {
       getManagementKeyTypeAfterRemoval: ['ctr', 'removeActionKey', (res, cb) => {
         res.ctr.getKey(key, MANAGEMENT_PURPOSE).then(key => cb(null, key));
       }]
-    },(err, res) => {
+    }, (err, res) => {
       assert.isTrue(res.getManagementKeyTypeBeforeRemoval[1].equals(res.getManagementKeyTypeAfterRemoval[1]), 'Key type has changed');
       return done();
     });
   });
 
+  it.only('allow payment key to make payment', (done) => {
+    const managementKey = addrToKey(accounts[3]);
+    const pspKey = addrToKey(accounts[4]);
+
+    const targetAccount = accounts[2];
+    const initialBalance = web3.eth.getBalance(targetAccount);
+
+    async.auto({
+      ctr: (cb) => Identity.new({from: owner}).then(ctr => cb(null, ctr)),
+      addManagementKey: ['ctr', (res, cb) => {
+        res.ctr.addKey(managementKey, MANAGEMENT_PURPOSE, ECDSA_TYPE).then(() => cb());
+      }],
+      deposit: ['ctr', (res, cb) => {
+        res.ctr.deposit({from: owner, value: web3.toWei(1, 'ether')}).then(() => cb());
+      }],
+      addPaymentKey: ['ctr', (res, cb) => {
+        res.ctr.addKey(pspKey, ALLOW_PAYMENT_PURPOSE, ECDSA_TYPE).then(() => cb());
+      }],
+      getPaymentKeys: ['ctr','addPaymentKey', (res, cb) => {
+        res.ctr.getKeysByPurpose(ALLOW_PAYMENT_PURPOSE).then(keys => cb(null, keys));
+      }],
+      executePaymentTx: ['ctr', 'deposit', 'addPaymentKey', (res, cb) => {
+        res.ctr.executePayment(targetAccount, web3.toWei(1, 'ether'), {from: accounts[4]}).then(() => {
+          const diff = web3.eth.getBalance(targetAccount).minus(initialBalance);
+          assert.isTrue(diff.equals(web3.toWei(1, 'ether')), 'Transaction not executed');
+          cb();
+        })
+      }],
+      executePaymentNotAllowTx: ['ctr', 'deposit', 'addPaymentKey', 'executePaymentTx',(res, cb) => {
+        res.ctr.executePayment(targetAccount, web3.toWei(1, 'ether'), {from: accounts[2]}).then(
+          () => {
+            assert.fail('Claim key can execute transaction');
+        })
+        .catch(() => cb());
+      }]
+    }, (err, res) => {
+      assert.isOk(res.getPaymentKeys.find(key => key === pspKey), 'Cannot find PAYMENT key');
+      return done();
+    });
+  })
+
 });
+
+//.catch(() => cb());

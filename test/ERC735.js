@@ -27,7 +27,7 @@ contract('Identity', (accounts) => {
         res.ctr.addClaim(1, 2, claimSigner, '0x12', '0x34', 'http://testclaim', {from: claimSigner}).then(() => cb());
       }],
       getClaimId: ['ctr', 'addClaim', (res, cb) => {
-        res.ctr.getClaimIdsByType(1).then((ids) => cb(null, ids));
+        res.ctr.getClaimIdsByTopic(1).then((ids) => cb(null, ids));
       }],
       getClaim: ['ctr', 'getClaimId', (res, cb) => {
         res.ctr.getClaim(res.getClaimId[0]).then(claim => cb(null, claim));
@@ -56,7 +56,7 @@ contract('Identity', (accounts) => {
           .catch(() => cb());
       }],
       getClaimId: ['ctr', 'addClaim', (res, cb) => {
-        res.ctr.getClaimIdsByType(1).then((ids) => cb(null, ids));
+        res.ctr.getClaimIdsByTopic(1).then((ids) => cb(null, ids));
       }]
     },(err, res) => {
       assert.equal(res.getClaimId.length, 0, 'Invalid number of claims for type 1');
@@ -74,13 +74,13 @@ contract('Identity', (accounts) => {
         res.ctr.addClaim(1, 2, claimSigner, '0x12', '0x34', 'http://testclaim', {from: claimSigner}).then(() => cb());
       }],
       getClaimId: ['ctr', 'addClaim', (res, cb) => {
-        res.ctr.getClaimIdsByType(1).then((ids) => cb(null, ids));
+        res.ctr.getClaimIdsByTopic(1).then((ids) => cb(null, ids));
       }],
       removeClaim: ['ctr', 'getClaimId', (res, cb) => {
         res.ctr.removeClaim(res.getClaimId[0], {from: claimSigner}).then(() => cb());
       }],
       getClaimIdAfterRemove: ['ctr', 'removeClaim', (res, cb) => {
-        res.ctr.getClaimIdsByType(1).then((ids) => cb(null, ids));
+        res.ctr.getClaimIdsByTopic(1).then((ids) => cb(null, ids));
       }],
       getClaim: ['ctr', 'removeClaim', 'getClaimId', (res, cb) => {
         res.ctr.getClaim(res.getClaimId[0]).then((claim) => cb(null, claim));
@@ -108,13 +108,13 @@ contract('Identity', (accounts) => {
         res.ctr.addClaim(1, 2, claimSigner, '0x12', '0x34', 'http://testclaim', {from: claimSigner}).then(() => cb());
       }],
       getClaimId: ['ctr', 'addClaim', (res, cb) => {
-        res.ctr.getClaimIdsByType(1).then((ids) => cb(null, ids));
+        res.ctr.getClaimIdsByTopic(1).then((ids) => cb(null, ids));
       }],
       removeClaim: ['ctr', 'getClaimId','addManagementKey', (res, cb) => {
         res.ctr.removeClaim(res.getClaimId[0], {from: management}).then(() => cb());
       }],
       getClaimIdAfterRemove: ['ctr', 'removeClaim', (res, cb) => {
-        res.ctr.getClaimIdsByType(1).then((ids) => cb(null, ids));
+        res.ctr.getClaimIdsByTopic(1).then((ids) => cb(null, ids));
       }]
     },(err, res) => {
       assert.equal(res.getClaimIdAfterRemove.length, 0, 'Invalid number of claims for type 1 after remove');
@@ -133,7 +133,7 @@ contract('Identity', (accounts) => {
         res.ctr.addClaim(1, 2, claimSigner, '0x12', '0x34', 'http://testclaim', {from: claimSigner}).then(() => cb());
       }],
       getClaimId: ['ctr', 'addClaim', (res, cb) => {
-        res.ctr.getClaimIdsByType(1).then((ids) => cb(null, ids));
+        res.ctr.getClaimIdsByTopic(1).then((ids) => cb(null, ids));
       }],
       removeClaim: ['ctr', 'getClaimId', (res, cb) => {
         res.ctr.removeClaim(res.getClaimId[0], {from: accounts[2]})
@@ -143,7 +143,7 @@ contract('Identity', (accounts) => {
           .catch(() => cb());
       }],
       getClaimIdAfterRemove: ['ctr', 'removeClaim', (res, cb) => {
-        res.ctr.getClaimIdsByType(1).then((ids) => cb(null, ids));
+        res.ctr.getClaimIdsByTopic(1).then((ids) => cb(null, ids));
       }]
     },(err, res) => {
       assert.equal(res.getClaimIdAfterRemove.length, 1, 'Invalid number of claims for type 1 after remove');

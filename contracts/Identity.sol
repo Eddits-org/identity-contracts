@@ -2,8 +2,9 @@ pragma solidity ^0.4.24;
 
 import "./ERC725.sol";
 import "./ERC735.sol";
+import "./Payment.sol";
 
-contract Identity is ERC725, ERC735 {
+contract Identity is ERC725, ERC735, Payment {
 
   event Debug(bytes32 key);
 
@@ -16,8 +17,6 @@ contract Identity is ERC725, ERC735 {
   mapping (uint256 => bytes32[]) claimsByTopic;
   
   uint nonce = 0;
-
-  uint256 constant ALLOW_PAYMENT_PURPOSE = 101; // 101 in hope that no standard will take this
   
   struct Transaction {
     address to;
@@ -38,6 +37,11 @@ contract Identity is ERC725, ERC735 {
 
   modifier isClaimSigner {
     require(keysPurposes[bytes32(msg.sender)][CLAIM_PURPOSE]);
+    _;
+  }
+
+  modifier isAllowSpender{
+    require(keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]);
     _;
   }
 
@@ -116,6 +120,25 @@ contract Identity is ERC725, ERC735 {
         approve(executionId, true);
       }
   }
+
+  function executePayment(address _to, uint256 _value) public returns (uint256 executionId) {
+    require(keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]);
+    executionId = uint256(keccak256(abi.encodePacked(_to, _value, nonce)));
+    emit ExecutionRequested(executionId, _to, _value, "");
+    transactions[executionId] = Transaction ({
+      to: _to,
+      value: _value,
+      data: "",
+      nonce: nonce
+      });
+    if (keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]) {
+      // maybe create another approve Internal
+      require(transactions[executionId].nonce == nonce);
+      nonce++;
+      transactions[executionId].to.call.value(transactions[executionId].value)(transactions[executionId].data);
+    }
+  }
+
 
   function approve(uint256 _id, bool _approve) isManager public returns (bool success) {
     require(transactions[_id].nonce == nonce);
