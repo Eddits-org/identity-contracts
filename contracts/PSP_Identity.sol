@@ -134,8 +134,8 @@ contract PSP_Identity is ERC725, Payment {
         require(verifyProof(proof));
         Identity customer = Identity(from);
 
-        (uint256 purpose, uint256 kType, bytes32 key) = customer.getKey( bytes32(msg.sender), ALLOW_PAYMENT_PURPOSE );
-        require(kType == ALLOW_PAYMENT_PURPOSE);
+        (uint256 purpose, uint256 kType, bytes32 key) = customer.getKey( bytes32(address(this)), ALLOW_PAYMENT_PURPOSE );
+        require(purpose == ALLOW_PAYMENT_PURPOSE);
 
         customer.executePayment(to, value);
 
