@@ -434,14 +434,12 @@ contract('Identity', (accounts) => {
       }],
       addPaymentKey: ['ctr','pspCtr', (res, cb) => {
         const pspKey = addrToKey(res.pspCtr.address);
-        console.log('key',pspKey);
         res.ctr.addKey(pspKey, ALLOW_PAYMENT_PURPOSE, ECDSA_TYPE).then(() => cb());
       }],
       getPaymentKeys: ['ctr','addPaymentKey', (res, cb) => {
         res.ctr.getKeysByPurpose(ALLOW_PAYMENT_PURPOSE).then(keys => cb(null, keys));
       }],
       executePaymentTx: ['ctr', 'deposit', 'addPaymentKey', 'pspCtr', (res, cb) => {
-        console.log(res.pspCtr.address);
         res.pspCtr.requestPayment(res.ctr.address,targetAccount, web3.toWei(1, 'ether'),"", {from: accounts[4]}).then(() => {
           const diff = web3.eth.getBalance(targetAccount).minus(initialBalance);
           assert.isTrue(diff.equals(web3.toWei(1, 'ether')), 'Transaction not executed');
