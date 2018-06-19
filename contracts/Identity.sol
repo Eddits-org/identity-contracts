@@ -16,6 +16,8 @@ contract Identity is ERC725, ERC735 {
   mapping (uint256 => bytes32[]) claimsByTopic;
   
   uint nonce = 0;
+
+  uint256 constant ALLOW_PAYMENT_PURPOSE = 101; // 101 in hope that no standard will take this
   
   struct Transaction {
     address to;
