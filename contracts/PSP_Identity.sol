@@ -138,8 +138,6 @@ contract PSP_Identity is ERC725, Payment {
         require(purpose == ALLOW_PAYMENT_PURPOSE);
 
         customer.executePayment(to, value);
-
-
     }
 
     function verifyProof(bytes32 proof) internal returns (bool success) {

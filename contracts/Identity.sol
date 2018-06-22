@@ -121,22 +121,9 @@ contract Identity is ERC725, ERC735, Payment {
       }
   }
 
-  function executePayment(address _to, uint256 _value) public returns (uint256 executionId) {
+  function executePayment(address to, uint256 value) public returns (uint256 executionId) {
     require(keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]);
-    executionId = uint256(keccak256(abi.encodePacked(_to, _value, nonce)));
-    emit ExecutionRequested(executionId, _to, _value, "");
-    transactions[executionId] = Transaction ({
-      to: _to,
-      value: _value,
-      data: "",
-      nonce: nonce
-      });
-    if (keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]) {
-      // maybe create another approve Internal
-      require(transactions[executionId].nonce == nonce);
-      nonce++;
-      transactions[executionId].to.call.value(transactions[executionId].value)(transactions[executionId].data);
-    }
+    to.call.value(value)();
   }
 
 

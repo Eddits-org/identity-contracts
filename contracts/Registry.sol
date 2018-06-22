@@ -18,6 +18,10 @@ contract PSPRegistry {
         owner = msg.sender;
     }
 
+    function getPSPNames() public view returns(bytes32[] psp_addresses){
+        return registeredPSP;
+    }
+
     function getPSPAddress(bytes32 psp_name) public view returns (address psp_address) {
         return nameToAddress[keccak256(abi.encodePacked(psp_name))];
     }

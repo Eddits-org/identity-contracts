@@ -1,0 +1,15 @@
+psp id: "0x8e3af8aca857d1abb5e17850e71d7f4e4d687b77"
+
+Registry: "0x029c6efc399caea7f400d83ba643af9dec7f7961"
+
+customer IC: "0xb0d63067e741c5db341d7ad30fe7c41767cd32e5"
+
+
+function executePayment(address _to, uint256 _value) public returns (uint256 executionId) {
+    require(keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]);
+    executionId = uint256(keccak256(abi.encodePacked(_to, _value)));
+    emit ExecutionRequested(executionId, _to, _value, "");
+    if (keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]) {
+      _to.call.value(_value)();
+    }
+  }
