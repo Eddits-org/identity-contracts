@@ -375,7 +375,7 @@ contract('Identity', (accounts) => {
     });
   });
 
-  it('allow payment key to make payment', (done) => {
+  it.only('allow payment key to make payment', (done) => {
     const managementKey = addrToKey(accounts[3]);
     const pspKey = addrToKey(accounts[4]);
 
@@ -401,14 +401,13 @@ contract('Identity', (accounts) => {
         })
       }],
       executePaymentNotAllowTx: ['ctr', 'deposit', 'addPaymentKey', 'executePaymentTx',(res, cb) => {
-        res.ctr.executePayment(targetAccount, web3.toWei(1, 'ether'), {from: accounts[2]}).then(
+        res.ctr.executePayment(targetAccount, web3.toWei(1, 'ether'), {from: accounts[4]}).then(
           () => {
-            assert(false,'not allowed key can execute transaction');
+            assert.fail('not allowed key can execute transaction');
         })
-        .catch((err) => cb(err));
+        .catch(() => cb());
       }]
     }, (err, res) => {
-      assert.ifError(err);
       assert.isOk(res.getPaymentKeys.find(key => key === pspKey), 'Cannot find PAYMENT key');
       return done();
     });
@@ -446,10 +445,9 @@ contract('Identity', (accounts) => {
         res.pspCtr.requestPayment(res.ctr.address,targetAccount, web3.toWei(100, 'ether'),"0x746f756368e9", {from: accounts[2]}).then(() => {
           assert(false,'Transaction should has been reverted -- not enough fund');
         })
-          .catch(err => cb(err));
+          .catch(() => cb());
       }]
     }, (err, res) => {
-      assert.ifError(err);
       const pspKey = addrToKey(res.pspCtr.address);
       assert.isOk(res.getPaymentKeys.find(key => key === pspKey), 'Cannot find PAYMENT key');
       return done();
