@@ -121,9 +121,13 @@ contract Identity is ERC725, ERC735, Payment {
       }
   }
 
-  function executePayment(address to, uint256 value) public returns (uint256 executionId) {
+  function executePayment(address to, uint256 value) public returns (bool success) {
     require(keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]);
-    to.call.value(value)();
+    require(this.balance > value);
+//    uint fee = ???
+    success = to.call.value(value)();
+//    msg.sender.call.value(fee)();
+    assert(success);
   }
 
 
