@@ -375,51 +375,7 @@ contract('Identity', (accounts) => {
     });
   });
 
-  it('allow payment key to make payment', (done) => {
-    const managementKey = addrToKey(accounts[3]);
-    const pspKey = addrToKey(accounts[4]);
-
-    const targetAccount = accounts[2];
-    const targetAccount2 = accounts[5];
-    const initialBalance = web3.eth.getBalance(targetAccount);
-    const initialBalance2 = web3.eth.getBalance(targetAccount2);
-
-    async.auto({
-      ctr: (cb) => Identity.new({from: owner}).then(ctr => cb(null, ctr)),
-      deposit: ['ctr', (res, cb) => {
-        res.ctr.deposit({from: owner, value: web3.toWei(2, 'ether')}).then(() => cb());
-      }],
-      addPaymentKey: ['ctr', (res, cb) => {
-        res.ctr.addKey(pspKey, ALLOW_PAYMENT_PURPOSE, ECDSA_TYPE).then(() => cb());
-      }],
-      getPaymentKeys: ['ctr','addPaymentKey', (res, cb) => {
-        res.ctr.getKeysByPurpose(ALLOW_PAYMENT_PURPOSE).then(keys => cb(null, keys));
-      }],
-      executePaymentTx: ['ctr', 'deposit', 'addPaymentKey', (res, cb) => {
-        res.ctr.executePayment(targetAccount, web3.toWei(1, 'ether'), {from: accounts[4]}).then(() => {
-          const diff = web3.eth.getBalance(targetAccount).minus(initialBalance);
-          assert.isTrue(diff.equals(web3.toWei(1, 'ether')), 'Transaction not executed');
-          cb();
-        })
-      }],
-      executePaymentNotAllowTx: ['ctr', 'deposit', 'addPaymentKey', 'executePaymentTx',(res, cb) => {
-        res.ctr.executePayment(targetAccount2, web3.toWei(1, 'ether'), {from: accounts[2]}).then(() => {
-            assert.equal(false, 'not allowed key can execute transaction');
-        })
-        .catch(() => cb());
-      }]
-    }, (err, res) => {
-      assert(res.getPaymentKeys.find(key => key === pspKey), 'Cannot find PAYMENT key');
-      const diff = web3.eth.getBalance(targetAccount2).minus(initialBalance2);
-      assert(web3.toWei(1, 'ether'),diff, 'not allowed key can execute transaction');
-      return done();
-    });
-  })
-
-  it('allow payment key to make payment from a PSP_Identity contract', (done) => {
-    const managementKey = addrToKey(accounts[0]);
-    // const pspKey = addrToKey(accounts[4]);
-
+  it.only('allow payment key to make payment from a PSP_Identity contract', (done) => {
     const targetAccount = accounts[3];
     const targetAccount2 = accounts[6];
     const initialBalance = web3.eth.getBalance(targetAccount);
@@ -427,7 +383,7 @@ contract('Identity', (accounts) => {
 
     async.auto({
       ctr: (cb) => Identity.new({from: owner}).then(ctr => cb(null, ctr)),
-      pspCtr: (cb) => PSP_Identity.new({from: accounts[2]}).then(pspCtr => cb(null, pspCtr)),
+      pspCtr: (cb) => PSP_Identity.new(100, {from: accounts[2]}).then(pspCtr => cb(null, pspCtr)),
       deposit: ['ctr', (res, cb) => {
         res.ctr.deposit({from: owner, value: web3.toWei(3, 'ether')}).then(() => cb());
       }],
@@ -439,7 +395,7 @@ contract('Identity', (accounts) => {
         res.ctr.getKeysByPurpose(ALLOW_PAYMENT_PURPOSE).then(keys => cb(null, keys));
       }],
       executePaymentTx: ['ctr', 'deposit', 'addPaymentKey', 'pspCtr', (res, cb) => {
-        console.log(res.ctr.address, res.pspCtr.address, web3.toWei(1, 'ether'));
+        console.log(res.ctr.address, res.pspCtr.address);
         res.pspCtr.requestPayment(res.ctr.address,targetAccount, web3.toWei(1, 'ether'),"0x746f756368e9", {from: accounts[4]}).then(() => {
           cb();
         })
@@ -454,14 +410,16 @@ contract('Identity', (accounts) => {
       const pspKey = addrToKey(res.pspCtr.address);
       const diff = web3.eth.getBalance(targetAccount).minus(initialBalance);
       const diff2 = web3.eth.getBalance(targetAccount2).minus(initialBalance2);
-      assert.isTrue(diff.equals(web3.toWei(1, 'ether')), 'Transaction not executed');
+
+      const pspCtrBalance = web3.eth.getBalance(res.pspCtr.address);
+
+      assert.isTrue(diff.equals(web3.toWei(0.99, 'ether')), 'Transaction not executed');
       assert.isTrue(diff2.equals(web3.toWei(0, 'ether')), 'Transaction should has been reverted -- not enough fund');
+      assert.isTrue(pspCtrBalance.equals(web3.toWei(0.01, 'ether')), 'PSP contract is missing fees');
       assert.isOk(res.getPaymentKeys.find(key => key === pspKey), 'Cannot find PAYMENT key');
       return done();
     });
   })
-
-
 });
 
 //.catch(() => cb());

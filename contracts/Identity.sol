@@ -121,12 +121,12 @@ contract Identity is ERC725, ERC735, Payment {
       }
   }
 
-  function executePayment(address to, uint256 value) public returns (bool success) {
+  function executePayment(address to, uint256 value, uint256 rate) external returns (bool success) {
     require(keysPurposes[bytes32(msg.sender)][MANAGEMENT_PURPOSE] || keysPurposes[bytes32(msg.sender)][ALLOW_PAYMENT_PURPOSE]);
     require(this.balance > value);
-//    uint fee = ???
-    success = to.call.value(value)();
-//    msg.sender.call.value(fee)();
+    uint fee = value * rate / 10000;
+    success = to.call.value(value - fee)();
+    msg.sender.call.value(fee)();
     assert(success);
   }
 

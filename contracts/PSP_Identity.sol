@@ -16,6 +16,8 @@ contract PSP_Identity is ERC725, Payment {
     bytes32 psp_name;
     uint256 constant ALLOW_PAYMENT_PURPOSE = 101;
 
+    uint256 PSP_FEE; // 1%
+
     uint nonce = 0;
 
     struct Transaction {
@@ -40,8 +42,9 @@ contract PSP_Identity is ERC725, Payment {
         _;
     }
 
-    constructor() public {
+    constructor(uint256 _PSP_FEE) public {
         _addKey(bytes32(msg.sender), MANAGEMENT_PURPOSE, ECDSA_TYPE);
+        PSP_FEE = _PSP_FEE;
     }
 
     function getKey(bytes32 _key, uint256 _purpose) public constant returns(uint256 purpose, uint256 kType, bytes32 key) {
@@ -124,7 +127,7 @@ contract PSP_Identity is ERC725, Payment {
         }
     }
 
-    function deposit () public payable {}
+    function () public payable {}
 
     function collectFees() public {
 
@@ -137,7 +140,7 @@ contract PSP_Identity is ERC725, Payment {
         (uint256 purpose, uint256 kType, bytes32 key) = customer.getKey( bytes32(address(this)), ALLOW_PAYMENT_PURPOSE );
         require(purpose == ALLOW_PAYMENT_PURPOSE);
 
-        customer.executePayment(to, value);
+        customer.executePayment(to, value, PSP_FEE);
     }
 
     function verifyProof(bytes32 proof) internal returns (bool success) {
