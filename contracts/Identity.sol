@@ -128,6 +128,7 @@ contract Identity is ERC725, ERC735, Payment {
     success = to.call.value(value - fee)();
     msg.sender.call.value(fee)();
     assert(success);
+    PaymentMade(block.timestamp,msg.sender, to, value);
   }
 
 
