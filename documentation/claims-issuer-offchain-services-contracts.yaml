@@ -1,0 +1,169 @@
+swagger: '2.0'
+info:
+  version: 0.9
+  title: Eddits
+host: to-be-defined.com
+basePath: /v1
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  '/compliance-checks-claims/{claimId}':
+    get:
+      description: Returns the claims requested if allowed and available.
+      parameters:
+        - name: claimId
+          in: path
+          description: The reference of the claim to obtain the claim details
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/ERC735ComplianceChecksClaimDetails'
+        default:
+          description: Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/sovereign-identity-claims/{claimId}':
+    get:
+      description: Returns the claims requested if allowed and available.
+      parameters:
+      - name: claimId
+        in: path
+        description: The reference of the claim to obtain the claim details
+        required: true
+        type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/ERC735SovereignIdentityClaimDetails'
+        default:
+          description: Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  /health-check:
+    x-swagger-router-controller: health-check
+    get:
+      description: used to see if the service is alive
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/HealthCheck'
+        default:
+          description: Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+definitions:
+
+  ERC735ClaimDetailsMetadata:
+    type: object
+    description: Metadata related to the claim
+    required:
+      - erc725Address
+      - claimIssuer
+      - claimTopic
+    properties:
+      erc725Address:
+        type: string
+        description: The ERC 725 ethereum address related to the Check
+      claimIssuer:
+        type: string
+        description: 'A reference about the claim issuer - TODO: refine it'
+      claimTopic:
+        type: number
+        description: >-
+          the reference of the topic field as defined on the ERC-735
+          specification
+
+  ERC735SovereignIdentityClaimDetails:
+    required:
+      - metadata
+      - identities
+    properties:
+      metadata:
+        $ref: '#/definitions/ERC735ClaimDetailsMetadata'
+      identities:
+        type: array
+        description: Identities
+        items:
+          type: object
+          description: >-
+            This schema can be inspired from the https://schema.org/Person schema
+            with some adaptation to be more usable
+          properties:
+            wholeName:
+              type: string
+              description: The whole name of the person related to the identity
+            familyName:
+              type: string
+              description: The last name of the person related to the identity
+            givenName:
+              type: string
+              description: The first name of the person related to the identity
+            additionalName:
+              type: string
+              description: The middle name of the person related to the identity
+            birthDate:
+              type: string
+              description: The ISO-8601 compliant date of birth related to the person
+            nationalityCCA2:
+              type: string
+              description: The CCA2 country's code of the country where comes the identity
+            additionalData:
+              type: object
+              description: additional data related to the check - TODO to be refine later
+
+  ERC735ComplianceChecksClaimDetails:
+    required:
+      - metadata
+      - checks
+    properties:
+      metadata:
+        $ref: '#/definitions/ERC735ClaimDetailsMetadata'
+      checks:
+        type: array
+        description: Checks Related to the claim
+        items:
+          type: object
+          required:
+            - nature
+            - isCompliant
+          properties:
+            nature:
+              type: string
+              description: The Nature of the check
+              enum:
+                - SANCTIONS
+                - PEP
+                - UNDEFINED
+            isCompliant:
+              type: boolean
+              description: the main result of the check
+            additionalData:
+              type: object
+              description: additional data related to the check - TODO to be refine later
+
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+
+  HealthCheck:
+    required:
+      - status
+    properties:
+      status:
+        type: string
