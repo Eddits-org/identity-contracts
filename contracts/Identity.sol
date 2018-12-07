@@ -3,10 +3,9 @@ pragma solidity ^0.4.24;
 import "./ERC725.sol";
 import "./ERC735.sol";
 import "./Payment.sol";
+import "./U2FKeyHolder.sol";
 
-contract Identity is ERC725, ERC735, Payment {
-
-  event Debug(bytes32 key);
+contract Identity is ERC725, ERC735, Payment, U2FKeyHolder {
 
   mapping (bytes32 => uint256) keysType;
   mapping (bytes32 => mapping (uint256 => bool)) keysPurposes;
@@ -191,6 +190,14 @@ contract Identity is ERC725, ERC735, Payment {
     delete claims[_claimId];
     emit ClaimRemoved(_claimId, claim.topic, claim.scheme, claim.issuer, claim.signature, claim.data, claim.uri);
     return true;
+  }
+
+  function addU2FKey(bytes _rawId, string _label, bytes _att) public isManager {
+    _addU2FKey(_rawId, _label, _att);
+  }
+
+  function removeU2FKey(bytes32 id) public isManager {
+    _removeU2FKey(id);
   }
 
 }

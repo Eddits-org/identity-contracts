@@ -6,6 +6,6 @@
   "license": "MIT",
   "devDependencies": {
     "async": "^2.6.0",
-    "truffle": "^4.0.4"
+    "truffle": "^4.1.14"
   }
 }
